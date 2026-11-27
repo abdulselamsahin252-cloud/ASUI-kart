@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -48,14 +49,19 @@ jobs:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
 
-      # 5. Gradle 8.11.1 kur ve önbelleği etkinleştir
+      # 5. Gradle 9.3.1 kur
       - name: Install Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.11.1'
-          cache-read-only: false
+          gradle-version: '9.3.1'
 
-      # 6. Eksik Debug Keystore dosyasını oluştur
+      # 6. Gradle Wrapper oluştur
+      - name: Generate Gradle Wrapper
+        run: |
+          gradle wrapper --gradle-version 9.3.1
+          chmod +x gradlew
+
+      # 7. Eksik Debug Keystore dosyasını oluştur
       - name: Generate Debug Keystore
         run: |
           if [ ! -f debug.keystore ]; then
@@ -70,16 +76,12 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-      # 7. Android APK derle
+      # 8. Android APK derle
       - name: Build APK
         run: |
-          if [ -x "./gradlew" ]; then
-            ./gradlew assembleDebug --stacktrace
-          else
-            gradle assembleDebug --stacktrace
-          fi
+          ./gradlew assembleDebug --stacktrace
 
-      # 8. APK dosyasını yükle
+      # 9. APK dosyasını yükle
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -87,4 +89,6 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+
           
